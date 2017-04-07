@@ -72,7 +72,44 @@ public class Api {
 
 	/**
 	 * Entry point to get an {@link Api} object. Example:
-	 * <code>API api = API.get("https://lesbonneschoses.prismic.io/api", null, new Cache.BuiltInCache(999), new Logger.PrintlnLogger());</code>
+	 *
+	 * @param endpoint
+	 *            the endpoint of your prismic.io content repository, typically
+	 *            https://yourrepoid.prismic.io/api
+	 * @param accessToken
+	 *            Your Oauth access token if you wish to use one (to access
+	 *            future content releases, for instance)
+	 * @param defaultReference
+	 *            The default reference to use with queries. Will default to
+	 *            master if null
+	 * @param cache
+	 *            instance of a class that implements the {@link Cache}
+	 *            interface, and will handle the cache
+	 * @param logger
+	 *            instance of a class that implements the {@link Logger}
+	 *            interface, and will handle the logging
+	 * @param proxy
+	 *            an optional java.net.Proxy instance that defines the http
+	 *            proxy to be used
+	 * @return the usable API object
+	 * 
+	 * 
+	 */
+	public static Api get(String endpoint, String accessToken, String defaultReference, final Cache cache, final Logger logger, final Proxy proxy) {
+		final String url = (accessToken == null ? endpoint : (endpoint + "?access_token=" + HttpClient.encodeURIComponent(accessToken)));
+		JsonNode json = cache.getOrSet(url, 5000L, new Cache.Callback() {
+			@Override
+			public JsonNode execute() {
+				return HttpClient.fetch(url, logger, null, proxy);
+			}
+		});
+
+		ApiData apiData = ApiData.parse(json);
+		return new Api(apiData, accessToken, defaultReference, cache, logger, proxy);
+	}
+
+	/**
+	 * Entry point to get an {@link Api} object. Example:
 	 *
 	 * @param endpoint
 	 *            the endpoint of your prismic.io content repository, typically
@@ -90,18 +127,11 @@ public class Api {
 	 *            instance of a class that implements the {@link Logger}
 	 *            interface, and will handle the logging
 	 * @return the usable API object
+	 * 
+	 * 
 	 */
-	public static Api get(String endpoint, String accessToken, String defaultReference, final Cache cache, final Logger logger, final Proxy proxy) {
-		final String url = (accessToken == null ? endpoint : (endpoint + "?access_token=" + HttpClient.encodeURIComponent(accessToken)));
-		JsonNode json = cache.getOrSet(url, 5000L, new Cache.Callback() {
-			@Override
-			public JsonNode execute() {
-				return HttpClient.fetch(url, logger, null, proxy);
-			}
-		});
-
-		ApiData apiData = ApiData.parse(json);
-		return new Api(apiData, accessToken, defaultReference, cache, logger, proxy);
+	public static Api get(String endpoint, String accessToken, String defaultReference, final Cache cache, final Logger logger) {
+		return get(endpoint, accessToken, defaultReference, cache, logger, null);
 	}
 
 	public static Api get(String endpoint, String accessToken, final Cache cache, final Logger logger) {
