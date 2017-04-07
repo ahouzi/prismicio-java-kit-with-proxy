@@ -123,7 +123,7 @@
 		<dependency>
 			<groupId>org.littleshoot</groupId>
 			<artifactId>littleproxy</artifactId>
-			<version>1.1.2</version>
+			<version>1.1.0</version>
 		</dependency>
 
 		<!--looger -->
